@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>본그룹 노을공원 빙고 스태프 현황</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Press+Start+2P&display=swap">
+<style>
+/* Layout: staff control desk — sticky top bar, 4 status counters, tabbed work area (participants / photos / stats). Same pixel-park identity as the participant page, calmer for scanning. */
+:root {
+  --ground: #EEF4E6;
+  --paper: #FFFDF6;
+  --ink: #2B1D12;
+  --muted: #5F5142;
+  --line: #CFC3AE;
+  --grass: #3E9E3A;
+  --grass-dk: #2A6E28;
+  --gold: #FFD23F;
+  --leaf: #C94A16;
+  --leaf-bg: #FFE3D2;
+  --sky: #2F62C9;
+  --sky-bg: #DCE7FB;
+  --white: #FFFFFF;
+  --f-display: "Black Han Sans", "Jua", system-ui, sans-serif;
+  --f-body: "Jua", system-ui, sans-serif;
+  --f-pixel: "Press Start 2P", ui-monospace, monospace;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--ground); }
+body { color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.45; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--ink); }
+[hidden] { display: none !important; }
+img { max-width: 100%; }
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
+.pixel { font-family: var(--f-pixel); font-size: 9px; letter-spacing: .5px; }
+.num { font-variant-numeric: tabular-nums; }
+
+.btn { border: 3px solid var(--ink); background: var(--white); padding: 9px 14px; font-size: 16px; box-shadow: 3px 3px 0 var(--ink); min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; color: var(--ink); }
+.btn:active:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+.btn:disabled { background: #E6DDCB; color: var(--muted); cursor: not-allowed; box-shadow: none; }
+.btn.gold { background: var(--gold); }
+.btn.green { background: var(--grass); color: var(--white); text-shadow: 1px 1px 0 var(--ink); }
+.btn.small { min-height: 36px; padding: 5px 10px; font-size: 14px; box-shadow: 2px 2px 0 var(--ink); }
+.input { width: 100%; border: 3px solid var(--ink); background: var(--white); padding: 10px 12px; font-size: 17px; border-radius: 0; }
+.error { color: #B3261E; margin: 0; min-height: 1.3em; font-size: 15px; }
+
+/* login */
+.login-wrap { min-height: 100%; display: flex; align-items: center; justify-content: center; padding-block: 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.login { width: 100%; max-width: 380px; background: var(--paper); border: 4px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+.login h1 { word-break: keep-all; margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 28px; line-height: 1.2; text-wrap: balance; }
+.login .pin { text-align: center; letter-spacing: 12px; font-family: var(--f-pixel); font-size: 20px; }
+.login .pixel { color: var(--leaf); }
+
+/* top bar */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--ink); color: var(--white); }
+.top-in { max-width: 1180px; margin: 0 auto; padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; }
+.brand { display: flex; flex-direction: column; min-width: 0; flex: 1 1 220px; }
+.brand .pixel { color: var(--gold); }
+.brand strong { font-family: var(--f-display); font-weight: 400; font-size: 21px; line-height: 1.2; }
+.top-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.top .btn { background: var(--paper); box-shadow: 2px 2px 0 #000; min-height: 38px; padding: 5px 10px; font-size: 14px; border-color: #000; }
+.stamp { font-size: 13px; color: #E8DCC4; }
+
+.main { max-width: 1180px; margin: 0 auto; padding-block: 18px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 18px; }
+
+/* counters */
+.counters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.counter { background: var(--paper); border: 3px solid var(--ink); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.counter .pixel { color: var(--muted); }
+.counter b { font-family: var(--f-display); font-weight: 400; font-size: 34px; line-height: 1.1; }
+.counter small { color: var(--muted); font-size: 14px; }
+.counter.alert { background: var(--gold); box-shadow: 4px 4px 0 var(--ink); }
+.counter.alert .pixel, .counter.alert small { color: var(--ink); }
+.counter.done b { color: var(--grass-dk); }
+@media (max-width: 720px) { .counters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* tabs */
+.tabs { display: flex; gap: 0; border-bottom: 3px solid var(--ink); overflow-x: auto; }
+.tab { border: 3px solid var(--ink); border-bottom: 0; background: #DDE7D2; padding: 10px 16px; font-size: 17px; margin-right: -3px; min-height: 46px; white-space: nowrap; }
+.tab[aria-selected="true"] { background: var(--paper); position: relative; top: 3px; padding-bottom: 13px; }
+.panel { background: var(--paper); border: 3px solid var(--ink); border-top: 0; padding: 16px; display: flex; flex-direction: column; gap: 14px; margin-top: -18px; }
+
+/* participant list */
+.tools { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.tools .input { flex: 1 1 220px; min-width: 0; max-width: 360px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.fchip { border: 3px solid var(--ink); background: var(--white); padding: 6px 12px; font-size: 15px; min-height: 40px; }
+.fchip[aria-pressed="true"] { background: var(--ink); color: var(--gold); }
+.list { display: flex; flex-direction: column; border: 3px solid var(--ink); background: var(--white); }
+.row { display: grid; grid-template-columns: minmax(0, 1.6fr) auto minmax(0, .9fr) auto; gap: 8px 14px; align-items: center; padding: 10px 12px; border: 0; border-top: 2px solid var(--line); background: var(--white); text-align: left; width: 100%; }
+.row:first-child { border-top: 0; }
+.row:hover { background: #FBF6E8; }
+.row.wait { background: #FFF6CC; }
+.who { display: flex; flex-direction: column; min-width: 0; }
+.who strong { font-size: 18px; overflow-wrap: anywhere; }
+.who span { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.mini { display: grid; grid-template-columns: repeat(3, 12px); gap: 2px; }
+.mini i { width: 12px; height: 12px; background: #E9E1CF; border: 1px solid #BFB29A; }
+.mini i.on { background: var(--grass); border-color: var(--grass-dk); }
+.meta { font-size: 14px; color: var(--muted); display: flex; flex-direction: column; }
+.pill { font-size: 14px; padding: 4px 10px; border: 2px solid var(--ink); white-space: nowrap; justify-self: end; }
+.pill.wait { background: var(--gold); }
+.pill.done { background: var(--grass); color: var(--white); }
+.pill.prog { background: var(--white); color: var(--muted); border-color: var(--line); }
+@media (max-width: 560px) {
+  .row { grid-template-columns: minmax(0, 1fr) auto; }
+  .row .meta { grid-column: 1; }
+  .row .pill { grid-column: 2; grid-row: 1; }
+  .row .mini { grid-column: 2; grid-row: 2; justify-self: end; }
+}
+.empty { padding: 28px 16px; text-align: center; color: var(--muted); }
+
+/* photos */
+.pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.pcard { border: 3px solid var(--ink); background: var(--white); padding: 0; display: flex; flex-direction: column; text-align: left; min-width: 0; }
+.pcard .ph { aspect-ratio: 1 / 1; max-width: 100%; background: #EFE7D6; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; overflow: hidden; }
+.pcard .ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pcard .cap { padding: 6px 8px; display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.pcard .cap span { color: var(--muted); font-size: 12px; }
+.ptag { align-self: flex-start; font-size: 12px; padding: 1px 6px; border: 2px solid var(--ink); }
+.ptag.leaf { background: var(--leaf-bg); }
+.ptag.group { background: var(--sky-bg); }
+
+/* stats */
+.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 820px) { .stats { grid-template-columns: minmax(0, 1fr); } }
+.card { border: 3px solid var(--ink); background: var(--white); padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.card h3 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 20px; }
+.card .sub { margin: 0; color: var(--muted); font-size: 14px; }
+.bars { display: flex; flex-direction: column; gap: 8px; }
+.bar-row { display: grid; grid-template-columns: minmax(0, 9em) minmax(0, 1fr) 4.2em; gap: 10px; align-items: center; font-size: 14px; }
+.bar-row .lbl { overflow-wrap: anywhere; }
+.track { height: 16px; background: #EFE7D6; border: 2px solid var(--ink); position: relative; }
+.fill { position: absolute; inset: 0 auto 0 0; background: var(--grass); }
+.fill.sky { background: var(--sky); }
+.fill.gold { background: var(--gold); }
+.bar-row .val { text-align: right; font-variant-numeric: tabular-nums; }
+.quotes { display: flex; flex-direction: column; gap: 10px; max-height: 520px; overflow-y: auto; padding-right: 4px; }
+.quote { border-left: 0; border: 2px solid var(--line); background: #FFFDF6; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
+.quote p { margin: 0; white-space: pre-line; overflow-wrap: anywhere; max-width: 65ch; }
+.quote span { font-size: 13px; color: var(--muted); }
+.tagcloud { display: flex; flex-wrap: wrap; gap: 6px; }
+.tagcloud span { border: 2px solid var(--ink); padding: 3px 9px; background: var(--sky-bg); font-size: 15px; }
+.tagcloud b { font-family: var(--f-pixel); font-size: 9px; font-weight: 400; margin-left: 6px; }
+.copyrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+/* detail sheet */
+.overlay { position: fixed; inset: 0; z-index: 20; background: rgba(43,29,18,.55); display: flex; align-items: flex-end; justify-content: center; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px); }
+@media (min-width: 760px) { .overlay { align-items: center; padding: 24px; } .sheet { border-bottom: 4px solid var(--ink) !important; max-height: 88% !important; } }
+.sheet { width: 100%; max-width: 680px; max-height: 92%; overflow-y: auto; background: var(--paper); border: 4px solid var(--ink); border-bottom: 0; padding: 18px max(16px, env(safe-area-inset-left, 0px)) calc(22px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 14px; }
+.sheet-top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.sheet h2 { word-break: keep-all; margin: 2px 0 0; font-family: var(--f-display); font-weight: 400; font-size: 26px; line-height: 1.2; overflow-wrap: anywhere; }
+.sheet .pixel { color: var(--leaf); }
+.x { border: 3px solid var(--ink); background: var(--white); width: 44px; height: 44px; flex-shrink: 0; font-family: var(--f-pixel); font-size: 12px; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+.fact { border: 2px solid var(--line); background: var(--white); padding: 8px 10px; display: flex; flex-direction: column; min-width: 0; }
+.fact span { font-size: 12px; color: var(--muted); }
+.fact b { font-weight: 400; font-size: 16px; overflow-wrap: anywhere; }
+.answers { display: flex; flex-direction: column; border: 3px solid var(--ink); background: var(--white); }
+.ans { display: grid; grid-template-columns: 2.4em minmax(0, 1fr); gap: 4px 10px; padding: 10px 12px; border-top: 2px solid var(--line); }
+.ans:first-child { border-top: 0; }
+.ans .n { font-family: var(--f-pixel); font-size: 10px; padding-top: 4px; color: var(--muted); }
+.ans .t { font-size: 14px; color: var(--muted); }
+.ans .v { grid-column: 2; white-space: pre-line; overflow-wrap: anywhere; }
+.ans .v.none { color: #A2927C; }
+.ans .v img { max-height: 280px; width: auto; border: 2px solid var(--ink); display: block; }
+.giftbox { border: 3px dashed var(--ink); padding: 12px; display: flex; flex-direction: column; gap: 10px; background: var(--white); }
+.giftbox.ok { background: #E3F3DF; border-style: solid; }
+.confirm { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 30; background: var(--gold); border: 3px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); padding: 8px 16px; font-size: 17px; white-space: nowrap; }
+</style>
+</head>
+<body>
+
+<div class="login-wrap" id="loginView">
+  <form class="login" id="loginForm" novalidate>
+    <span class="pixel">STAFF ONLY</span>
+    <h1>본그룹 노을공원 빙고<br>사회공헌팀 스태프 화면</h1>
+    <label for="pinInput">스태프 비밀번호</label>
+    <input class="input pin" id="pinInput" type="password" inputmode="numeric" maxlength="6" autocomplete="off">
+    <p class="error" id="loginErr"></p>
+    <button class="btn gold" type="submit">들어가기</button>
+  </form>
+</div>
+
+<div id="appView" hidden>
+  <header class="top">
+    <div class="top-in">
+      <div class="brand">
+        <span class="pixel">사회공헌팀 STAFF</span>
+        <strong>본그룹 노을공원 나무심기 봉사활동 빙고</strong>
+      </div>
+      <div class="top-actions">
+        <span class="stamp" id="stamp" aria-live="polite"></span>
+        <button class="btn" type="button" id="refreshBtn">새로고침</button>
+        <a class="btn" id="sheetLink" href="#" target="_blank" rel="noopener" hidden>시트 열기</a>
+        <a class="btn" id="folderLink" href="#" target="_blank" rel="noopener" hidden>사진 폴더</a>
+        <button class="btn" type="button" id="logoutBtn">나가기</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="counters" aria-label="현황 요약">
+      <div class="counter"><span class="pixel">TEAMS</span><b class="num" id="cTotal">0</b><small id="cTotalSub">개인 0 · 가족 0</small></div>
+      <div class="counter"><span class="pixel">ALL CLEAR</span><b class="num" id="cClear">0</b><small id="cClearSub">9칸 완료</small></div>
+      <div class="counter alert" id="cWaitBox"><span class="pixel">WAITING</span><b class="num" id="cWait">0</b><small>선물 지급 대기</small></div>
+      <div class="counter done"><span class="pixel">GIFT</span><b class="num" id="cGift">0</b><small>선물 지급 완료</small></div>
+    </section>
+
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="tab-people" aria-selected="true" aria-controls="pane-people">참가자</button>
+      <button class="tab" role="tab" id="tab-photos" aria-selected="false" aria-controls="pane-photos">사진</button>
+      <button class="tab" role="tab" id="tab-stats" aria-selected="false" aria-controls="pane-stats">통계·의견</button>
+    </div>
+
+    <section class="panel" id="pane-people" role="tabpanel" aria-labelledby="tab-people">
+      <div class="tools">
+        <input class="input" id="search" type="search" placeholder="이름·자녀·참가ID 검색" aria-label="참가자 검색">
+        <div class="chips" id="filters">
+          <button class="fchip" type="button" data-f="all" aria-pressed="true">전체</button>
+          <button class="fchip" type="button" data-f="wait" aria-pressed="false">선물 대기</button>
+          <button class="fchip" type="button" data-f="prog" aria-pressed="false">진행 중</button>
+          <button class="fchip" type="button" data-f="done" aria-pressed="false">지급 완료</button>
+        </div>
+      </div>
+      <div class="list" id="list"></div>
+    </section>
+
+    <section class="panel" id="pane-photos" role="tabpanel" aria-labelledby="tab-photos" hidden>
+      <div class="tools">
+        <div class="chips" id="pfilters">
+          <button class="fchip" type="button" data-p="all" aria-pressed="true">전체</button>
+          <button class="fchip" type="button" data-p="7" aria-pressed="false">함께 사진 (후기 활용)</button>
+          <button class="fchip" type="button" data-p="1" aria-pressed="false">예쁜 낙엽</button>
+        </div>
+      </div>
+      <div class="pgrid" id="pgrid"></div>
+    </section>
+
+    <section class="panel" id="pane-stats" role="tabpanel" aria-labelledby="tab-stats" hidden>
+      <div class="stats">
+        <div class="card">
+          <h3>다음에도 참여할까요?</h3>
+          <p class="sub" id="rejoinSub"></p>
+          <div class="bars" id="rejoinBars"></div>
+        </div>
+        <div class="card">
+          <h3>미션별 완료</h3>
+          <p class="sub">참가 팀 중 각 미션을 완료한 비율</p>
+          <div class="bars" id="missionBars"></div>
+        </div>
+        <div class="card">
+          <h3>다음에 해보고 싶은 것</h3>
+          <div class="tagcloud" id="ideaTags"></div>
+          <div class="quotes" id="ideaList"></div>
+        </div>
+        <div class="card">
+          <h3>참여소감</h3>
+          <div class="copyrow"><p class="sub" id="reviewSub" style="flex: 1"></p><button class="btn small" type="button" id="copyReviews">전체 복사</button></div>
+          <div class="quotes" id="reviewList"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="overlay" id="overlay" hidden></div>
+<div id="toastHost"></div>
+
+<script>
+(function () {
+  // API-START
+  // ▼ index.html 과 같은 Apps Script 웹 앱 URL(…/exec)을 붙여 넣으세요
+  var API_URL = 'PASTE_YOUR_WEB_APP_URL_HERE';
+  function call(fn) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    if (!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(API_URL)) {
+      return Promise.reject(new Error('서버 주소가 아직 설정되지 않았어요. staff.html 의 API_URL 을 확인해 주세요.'));
+    }
+    return fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: fn, args: args }),
+      redirect: 'follow'
+    }).then(function (r) { if (!r.ok) throw new Error(''); return r.json(); })
+      .then(function (j) { if (!j || !j.ok) throw new Error((j && j.error) || ''); return j.data; });
+  }
+  // API-END
+
+  var PIN_KEY = 'bon-noeul-staff-pin';
+  var MISSION_SHORT = ['예쁜 낙엽', '다음에도 참여', '처음 만난 사람', '노을공원 퀴즈', '심은 나무', '해보고 싶은 것', '함께 사진', '단체 이름', '참여소감'];
+  var IDEA_WORDS = ['보물찾기', '줍깅', '숲 해설', '관찰', '새집', '피크닉', '나무심기', '캠핑', '플로깅'];
+  var pin = '';
+  var D = null;            // 서버에서 받은 전체 데이터
+  var filter = 'all', pfilter = 'all', query = '';
+  var photoCache = {};     // fileId -> data URL
+  var openId = null;
+  var timer = null;
+
+  function $(id) { return document.getElementById(id); }
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function hm(t) { if (!t) return ''; var d = new Date(t); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
+  function errMsg(e) { var m = (e && e.message) || ''; return m && /[가-힣]/.test(m) ? m : '서버에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.'; }
+  function toast(msg) { var el = document.createElement('div'); el.className = 'toast'; el.setAttribute('role', 'status'); el.textContent = msg; $('toastHost').appendChild(el); setTimeout(function () { el.remove(); }, 1800); }
+  function status(p) { return p.gift ? 'done' : (p.doneCount >= 9 ? 'wait' : 'prog'); }
+  function who(p) { return p.mode === 'family' ? p.name + ' 가족' : p.name; }
+  function ss(k, v) { try { if (v === undefined) return sessionStorage.getItem(k); if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) { return null; } }
+
+  // ===== 로그인 =====
+  $('loginForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var v = $('pinInput').value.trim();
+    if (!v) { $('loginErr').textContent = '비밀번호를 입력해 주세요.'; return; }
+    login(v);
+  });
+  function login(v) {
+    $('loginErr').textContent = '확인 중...';
+    call('staffData', v).then(function (res) {
+      if (!res || !res.ok) { $('loginErr').textContent = '비밀번호가 맞지 않아요.'; ss(PIN_KEY, null); return; }
+      pin = v; ss(PIN_KEY, v); $('loginErr').textContent = '';
+      $('loginView').hidden = true; $('appView').hidden = false;
+      apply(res); startTimer();
+    }).catch(function (e) { $('loginErr').textContent = errMsg(e); });
+  }
+  $('logoutBtn').addEventListener('click', function () {
+    pin = ''; ss(PIN_KEY, null); D = null; stopTimer();
+    $('appView').hidden = true; $('loginView').hidden = false; $('pinInput').value = '';
+  });
+
+  // ===== 데이터 =====
+  function refresh(quiet) {
+    if (!pin) return Promise.resolve();
+    if (!quiet) $('stamp').textContent = '불러오는 중...';
+    return call('staffData', pin).then(function (res) {
+      if (!res || !res.ok) { $('logoutBtn').click(); $('loginErr').textContent = '다시 로그인해 주세요.'; return; }
+      apply(res);
+    }).catch(function (e) { $('stamp').textContent = errMsg(e); });
+  }
+  function apply(res) {
+    D = res;
+    $('stamp').textContent = hm(res.now) + ' 기준';
+    if (res.sheetUrl) { $('sheetLink').href = res.sheetUrl; $('sheetLink').hidden = false; }
+    if (res.folderUrl) { $('folderLink').href = res.folderUrl; $('folderLink').hidden = false; }
+    renderAll();
+  }
+  $('refreshBtn').addEventListener('click', function () { refresh(false); });
+  function startTimer() { stopTimer(); timer = setInterval(function () { if (!document.hidden && $('overlay').hidden) refresh(true); }, 30000); }
+  function stopTimer() { if (timer) clearInterval(timer); timer = null; }
+
+  // ===== 화면 =====
+  function renderAll() { renderCounters(); renderList(); renderPhotos(); renderStats(); }
+
+  function renderCounters() {
+    var ps = D.people, solo = 0, fam = 0, clear = 0, wait = 0, gift = 0;
+    ps.forEach(function (p) {
+      if (p.mode === 'family') fam++; else solo++;
+      if (p.doneCount >= 9) clear++;
+      if (p.gift) gift++; else if (p.doneCount >= 9) wait++;
+    });
+    $('cTotal').textContent = ps.length;
+    $('cTotalSub').textContent = '개인 ' + solo + ' · 가족 ' + fam;
+    $('cClear').textContent = clear;
+    $('cClearSub').textContent = ps.length ? '9칸 완료 · ' + Math.round(clear / ps.length * 100) + '%' : '9칸 완료';
+    $('cWait').textContent = wait;
+    $('cWaitBox').classList.toggle('alert', wait > 0);
+    $('cGift').textContent = gift;
+  }
+
+  function renderList() {
+    var order = { wait: 0, prog: 1, done: 2 };
+    var q = query.replace(/\s/g, '').toLowerCase();
+    var rows = D.people.filter(function (p) {
+      if (filter !== 'all' && status(p) !== filter) return false;
+      if (!q) return true;
+      return (p.name + p.family + p.id).replace(/\s/g, '').toLowerCase().indexOf(q) >= 0;
+    }).sort(function (a, b) {
+      var s = order[status(a)] - order[status(b)];
+      return s || (b.updated || 0) - (a.updated || 0);
+    });
+    if (!rows.length) {
+      $('list').innerHTML = '<div class="empty">' + (D.people.length ? '조건에 맞는 참가자가 없어요.' : '아직 등록한 참가자가 없어요. 참가자가 QR로 등록하면 여기에 바로 나타나요.') + '</div>';
+      return;
+    }
+    $('list').innerHTML = rows.map(function (p) {
+      var st = status(p);
+      var pill = st === 'done' ? '<span class="pill done">지급 완료 ' + hm(p.gift) + '</span>' : st === 'wait' ? '<span class="pill wait">선물 대기</span>' : '<span class="pill prog">' + p.doneCount + ' / 9</span>';
+      var mini = '<span class="mini" aria-hidden="true">' + p.answers.map(function (a) { return '<i class="' + (a ? 'on' : '') + '"></i>'; }).join('') + '</span>';
+      return '<button type="button" class="row' + (st === 'wait' ? ' wait' : '') + '" data-id="' + esc(p.id) + '">' +
+        '<span class="who"><strong>' + esc(who(p)) + '</strong><span>' + (p.family ? '자녀 ' + esc(p.family) : '개인 참가') + '</span></span>' +
+        mini +
+        '<span class="meta"><span>미션 ' + p.doneCount + '/9 · 빙고 ' + p.lines + '줄</span><span>등록 ' + hm(p.created) + '</span></span>' +
+        pill + '</button>';
+    }).join('');
+  }
+  $('list').addEventListener('click', function (e) { var r = e.target.closest('.row'); if (r) openDetail(r.getAttribute('data-id')); });
+  $('search').addEventListener('input', function () { query = this.value; renderList(); });
+  $('filters').addEventListener('click', function (e) {
+    var b = e.target.closest('.fchip'); if (!b) return;
+    filter = b.getAttribute('data-f');
+    this.querySelectorAll('.fchip').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+    renderList();
+  });
+
+  // ===== 탭 =====
+  var TABS = ['people', 'photos', 'stats'];
+  document.querySelector('.tabs').addEventListener('click', function (e) {
+    var t = e.target.closest('.tab'); if (!t) return;
+    var key = t.id.replace('tab-', '');
+    TABS.forEach(function (k) { $('tab-' + k).setAttribute('aria-selected', String(k === key)); $('pane-' + k).hidden = k !== key; });
+    if (key === 'photos') loadVisiblePhotos();
+  });
+
+  // ===== 사진 =====
+  function allPhotos() {
+    var out = [];
+    D.people.forEach(function (p) {
+      [7, 1].forEach(function (mid) {
+        var a = p.answers[mid - 1];
+        if (a && a.photo) out.push({ p: p, mid: mid, fileId: a.photo, url: a.url });
+      });
+    });
+    return out.sort(function (a, b) { return (b.p.updated || 0) - (a.p.updated || 0); });
+  }
+  function renderPhotos() {
+    var items = allPhotos().filter(function (x) { return pfilter === 'all' || String(x.mid) === pfilter; });
+    if (!items.length) { $('pgrid').innerHTML = '<div class="empty" style="grid-column: 1 / -1">아직 올라온 사진이 없어요.</div>'; return; }
+    $('pgrid').innerHTML = items.map(function (x) {
+      var src = photoCache[x.fileId];
+      return '<button type="button" class="pcard" data-id="' + esc(x.p.id) + '">' +
+        '<span class="ph" data-file="' + esc(x.fileId) + '">' + (src ? '<img alt="' + esc(who(x.p)) + ' 사진" src="' + src + '">' : '불러오는 중') + '</span>' +
+        '<span class="cap"><span class="ptag ' + (x.mid === 7 ? 'group' : 'leaf') + '">' + (x.mid === 7 ? '함께 사진 · 후기 활용' : '예쁜 낙엽') + '</span><strong>' + esc(who(x.p)) + '</strong></span></button>';
+    }).join('');
+    if (!$('pane-photos').hidden) loadVisiblePhotos();
+  }
+  $('pgrid').addEventListener('click', function (e) { var c = e.target.closest('.pcard'); if (c) openDetail(c.getAttribute('data-id')); });
+  $('pfilters').addEventListener('click', function (e) {
+    var b = e.target.closest('.fchip'); if (!b) return;
+    pfilter = b.getAttribute('data-p');
+    this.querySelectorAll('.fchip').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+    renderPhotos();
+  });
+
+  var queue = [], running = 0, pending = {};
+  function getPhoto(fileId) {
+    if (photoCache[fileId]) return Promise.resolve(photoCache[fileId]);
+    if (pending[fileId]) return pending[fileId];
+    pending[fileId] = new Promise(function (resolve) { queue.push({ id: fileId, done: resolve }); pump(); });
+    return pending[fileId];
+  }
+  function pump() {
+    while (running < 3 && queue.length) {
+      var job = queue.shift(); running++;
+      (function (job) {
+        call('staffPhoto', pin, job.id).then(function (res) {
+          if (res && res.ok && res.src) photoCache[job.id] = res.src;
+          job.done(photoCache[job.id] || null);
+        }).catch(function () { job.done(null); }).then(function () { running--; delete pending[job.id]; pump(); });
+      })(job);
+    }
+  }
+  function fillPhoto(holder) {
+    var id = holder.getAttribute('data-file');
+    if (!id || holder.querySelector('img')) return;
+    getPhoto(id).then(function (src) {
+      if (src) holder.innerHTML = '<img alt="참가자 사진" src="' + src + '">';
+      else holder.textContent = '사진을 불러오지 못했어요';
+    });
+  }
+  function loadVisiblePhotos() { document.querySelectorAll('#pgrid [data-file]').forEach(fillPhoto); }
+
+  // ===== 통계·의견 =====
+  function bar(label, n, total, cls) {
+    var pct = total ? Math.round(n / total * 100) : 0;
+    return '<div class="bar-row"><span class="lbl">' + esc(label) + '</span><span class="track" role="img" aria-label="' + esc(label) + ' ' + n + '팀"><span class="fill ' + (cls || '') + '" style="width: ' + pct + '%"></span></span><span class="val">' + n + '팀</span></div>';
+  }
+  function renderStats() {
+    var ps = D.people, total = ps.length;
+    // 재참여
+    var opts = D.rejoinOptions || [], counts = opts.map(function () { return 0; }), answered = 0;
+    ps.forEach(function (p) { var a = p.answers[1]; if (a && a.text) { answered++; var k = opts.indexOf(a.text); if (k >= 0) counts[k]++; } });
+    $('rejoinSub').textContent = '응답 ' + answered + '팀' + (answered ? ' · 다시 참여 의향 ' + Math.round((counts[0] + (counts[1] || 0)) / answered * 100) + '%' : '');
+    $('rejoinBars').innerHTML = opts.map(function (o, k) { return bar(o, counts[k], answered, k === 0 ? '' : k === 1 ? 'sky' : 'gold'); }).join('');
+    // 미션별
+    $('missionBars').innerHTML = MISSION_SHORT.map(function (s, i) {
+      var n = ps.filter(function (p) { return p.answers[i]; }).length;
+      return bar((i < 9 ? '0' : '') + (i + 1) + ' ' + s, n, total);
+    }).join('');
+    // 해보고 싶은 것
+    var ideas = ps.filter(function (p) { return p.answers[5] && p.answers[5].text; });
+    var wc = IDEA_WORDS.map(function (w) { return { w: w, n: ideas.filter(function (p) { return p.answers[5].text.indexOf(w) >= 0; }).length }; })
+      .filter(function (x) { return x.n; }).sort(function (a, b) { return b.n - a.n; });
+    $('ideaTags').innerHTML = wc.map(function (x) { return '<span>' + esc(x.w) + '<b>' + x.n + '</b></span>'; }).join('');
+    $('ideaList').innerHTML = ideas.length ? ideas.map(function (p) {
+      return '<div class="quote"><p>' + esc(p.answers[5].text) + '</p><span>' + esc(who(p)) + '</span></div>';
+    }).join('') : '<div class="empty">아직 응답이 없어요.</div>';
+    // 참여소감
+    var reviews = ps.filter(function (p) { return p.answers[8] && p.answers[8].text; });
+    $('reviewSub').textContent = reviews.length + '개';
+    $('reviewList').innerHTML = reviews.length ? reviews.map(function (p) {
+      return '<div class="quote"><p>' + esc(p.answers[8].text) + '</p><span>' + esc(who(p)) + ' · ' + hm(p.updated) + '</span></div>';
+    }).join('') : '<div class="empty">아직 참여소감이 없어요.</div>';
+  }
+  $('copyReviews').addEventListener('click', function () {
+    if (!D) return;
+    var text = D.people.filter(function (p) { return p.answers[8] && p.answers[8].text; })
+      .map(function (p) { return '[' + who(p) + ']\n' + p.answers[8].text; }).join('\n\n');
+    if (!text) { toast('복사할 소감이 없어요'); return; }
+    var done = function () { toast('참여소감을 복사했어요'); };
+    try {
+      navigator.clipboard.writeText(text).then(done).catch(fallback);
+    } catch (e) { fallback(); }
+    function fallback() {
+      var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch (e2) { toast('복사하지 못했어요'); }
+      ta.remove();
+    }
+  });
+
+  // ===== 상세 =====
+  var overlay = $('overlay');
+  function closeDetail() { overlay.hidden = true; overlay.innerHTML = ''; openId = null; document.body.style.overflow = ''; }
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) closeDetail(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !overlay.hidden) closeDetail(); });
+
+  function openDetail(id) {
+    var p = D.people.filter(function (x) { return x.id === id; })[0]; if (!p) return;
+    openId = id;
+    var st = status(p);
+    var answers = (D.missions || MISSION_SHORT).map(function (title, i) {
+      var a = p.answers[i], v;
+      if (!a) v = '<span class="v none">아직 안 했어요</span>';
+      else if (a.photo) v = '<span class="v" data-file="' + esc(a.photo) + '">사진 불러오는 중</span>' + (a.url ? '<a class="v" href="' + esc(a.url) + '" target="_blank" rel="noopener" style="font-size: 14px">드라이브에서 원본 보기</a>' : '');
+      else v = '<span class="v">' + esc(a.text) + '</span>';
+      var t = String(title).replace(/^\d+\s*/, '');
+      return '<div class="ans"><span class="n">' + ('0' + (i + 1)).slice(-2) + '</span><span class="t">' + esc(t) + '</span>' + v + '</div>';
+    }).join('');
+    var gift = st === 'done'
+      ? '<div class="giftbox ok"><strong>선물 지급 완료 · ' + hm(p.gift) + '</strong></div>'
+      : st === 'wait'
+        ? '<div class="giftbox"><strong>9칸을 모두 완료했어요. 선물을 지급할 수 있어요.</strong><div class="confirm" id="giftArea"><button type="button" class="btn green" id="giftAsk">선물 지급 처리</button></div><p class="error" id="giftErr"></p></div>'
+        : '<div class="giftbox"><span>남은 미션 ' + (9 - p.doneCount) + '개. 9칸을 모두 채우면 선물을 지급할 수 있어요.</span></div>';
+    overlay.innerHTML = '<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="dTitle">' +
+      '<div class="sheet-top"><div><span class="pixel">' + (p.mode === 'family' ? 'FAMILY' : 'SOLO') + ' · ' + esc(p.id) + '</span><h2 id="dTitle">' + esc(who(p)) + '</h2></div><button class="x" type="button" id="dClose" aria-label="닫기">X</button></div>' +
+      '<div class="facts">' +
+        '<div class="fact"><span>자녀 이름</span><b>' + (p.family ? esc(p.family) : '-') + '</b></div>' +
+        '<div class="fact"><span>등록</span><b>' + hm(p.created) + '</b></div>' +
+        '<div class="fact"><span>미션 · 빙고</span><b>' + p.doneCount + '/9 · ' + p.lines + '줄</b></div>' +
+        '<div class="fact"><span>최근 활동</span><b>' + hm(p.updated) + '</b></div>' +
+      '</div>' + gift + '<div class="answers">' + answers + '</div></div>';
+    overlay.hidden = false; document.body.style.overflow = 'hidden';
+    $('dClose').addEventListener('click', closeDetail);
+    overlay.querySelectorAll('.ans [data-file]').forEach(fillPhoto);
+    var ask = $('giftAsk');
+    if (ask) ask.addEventListener('click', function () {
+      $('giftArea').innerHTML = '<span style="align-self: center">' + esc(who(p)) + '에게 선물을 줬나요?</span><button type="button" class="btn green" id="giftYes">네, 지급했어요</button><button type="button" class="btn" id="giftNo">취소</button>';
+      $('giftNo').addEventListener('click', function () { openDetail(id); });
+      $('giftYes').addEventListener('click', function () {
+        this.disabled = true;
+        call('staffRedeem', pin, id).then(function (res) {
+          if (res && res.ok) { toast('선물 지급을 기록했어요'); return refresh(true).then(function () { openDetail(id); }); }
+          var c = res && res.error;
+          $('giftErr').textContent = c === 'already' ? '이미 선물을 받은 기록이 있어요.' : c === 'notready' ? '아직 9칸을 모두 채우지 않았어요.' : c === 'pin' ? '다시 로그인해 주세요.' : '참가 기록을 찾을 수 없어요.';
+          refresh(true);
+        }).catch(function (e) { $('giftErr').textContent = errMsg(e); });
+      });
+    });
+  }
+
+  // ===== 시작 =====
+  var saved = ss(PIN_KEY);
+  if (saved) login(saved);
+})();
+</script>
+</body>
+</html>
