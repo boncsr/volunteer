@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>본그룹 노을공원 나무심기 봉사활동 빙고</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=Press+Start+2P&display=swap">
+<style>
+html, body { margin: 0; }
+[hidden] { display: none !important; }
+img { max-width: 100%; }
+/* Layout: one phone-width game column — pixel sunset scene, HUD, 3x3 mission board, gift counter. Single committed daytime-arcade look. */
+:root {
+  --sky: #9ED8F5;
+  --sun: #FF8A3D;
+  --grass: #5DBB4A;
+  --grass-dk: #2F7D32;
+  --ink: #2B1D12;
+  --paper: #FFF8E6;
+  --paper-2: #FBEBC4;
+  --gold: #FFD23F;
+  --leaf: #E0581F;
+  --quiz: #2F62C9;
+  --muted: #6B5644;
+  --white: #FFFFFF;
+  --f-display: "Black Han Sans", "Jua", system-ui, sans-serif;
+  --f-body: "Jua", system-ui, sans-serif;
+  --f-pixel: "Press Start 2P", ui-monospace, monospace;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--grass); }
+body {
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 17px;
+  line-height: 1.45;
+  -webkit-tap-highlight-color: transparent;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--ink); }
+.wrap {
+  max-width: 540px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+/* pixel panel */
+.panel {
+  background: var(--paper);
+  border: 4px solid var(--ink);
+  box-shadow: 5px 5px 0 var(--ink);
+  padding: 16px;
+}
+.pixel-label { font-family: var(--f-pixel); font-size: 10px; letter-spacing: 1px; }
+
+/* scene */
+.scene { position: relative; margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px))); }
+.scene canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; image-rendering: crisp-edges; }
+.hud {
+  position: absolute; inset: 10px max(16px, env(safe-area-inset-right, 0px)) auto max(16px, env(safe-area-inset-left, 0px));
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+}
+.chip {
+  background: var(--ink); color: var(--white);
+  font-family: var(--f-pixel); font-size: 9px; padding: 7px 8px; line-height: 1;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.chip b { color: var(--gold); font-weight: 400; }
+.title-block {
+  position: absolute; left: 0; right: 0; top: 34px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center;
+  padding-inline: 16px;
+}
+.kicker { font-family: var(--f-body); color: var(--ink); background: var(--gold); border: 3px solid var(--ink); padding: 2px 10px; font-size: 15px; }
+h1 {
+  margin: 0;
+  font-family: var(--f-display); font-weight: 400;
+  font-size: clamp(34px, 10vw, 52px); line-height: 1.05;
+  color: var(--white);
+  text-shadow: 3px 0 0 var(--ink), -3px 0 0 var(--ink), 0 3px 0 var(--ink), 0 -3px 0 var(--ink), 3px 3px 0 var(--ink), -3px 3px 0 var(--ink), 3px -3px 0 var(--ink), -3px -3px 0 var(--ink), 0 7px 0 var(--ink);
+  text-wrap: balance;
+}
+h1 .hl { color: var(--gold); }
+
+/* start form */
+.start h2, .section-title {
+  margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 24px; display: flex; align-items: center; gap: 10px;
+}
+.start form { display: flex; flex-direction: column; gap: 14px; margin-top: 12px; }
+.seg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label {
+  border: 4px solid var(--ink); background: var(--white); padding: 12px 10px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 19px;
+  box-shadow: 3px 3px 0 var(--ink); cursor: pointer;
+}
+.seg label small { font-size: 13px; color: var(--muted); }
+.seg input:checked + label { background: var(--gold); transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+.seg input:focus-visible + label { outline: 3px solid var(--quiz); outline-offset: 2px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 16px; }
+.input {
+  width: 100%; border: 4px solid var(--ink); background: var(--white); padding: 11px 12px; font-size: 18px; border-radius: 0;
+}
+textarea.input { resize: vertical; min-height: 110px; }
+.btn {
+  border: 4px solid var(--ink); background: var(--gold); padding: 13px 16px; font-size: 20px;
+  box-shadow: 4px 4px 0 var(--ink); display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+}
+.btn:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: 1px 1px 0 var(--ink); }
+.btn:disabled { background: #D9CBB2; color: var(--muted); cursor: not-allowed; }
+.btn.green { background: var(--grass); color: var(--white); text-shadow: 2px 2px 0 var(--ink); }
+.btn.blue { background: var(--quiz); color: var(--white); text-shadow: 2px 2px 0 var(--ink); }
+.btn.ghost { background: var(--white); }
+.btn.block { width: 100%; }
+.error { color: #B3261E; font-size: 15px; min-height: 1.2em; margin: 0; }
+
+/* player bar */
+.player { display: flex; flex-direction: column; gap: 10px; }
+.names { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.names .field { min-width: 0; }
+.names label small { font-size: 13px; color: var(--muted); }
+.names .input { font-size: 17px; padding: 10px; }
+.names .input:disabled { background: var(--paper-2); color: var(--ink); }
+@media (max-width: 420px) { .names { grid-template-columns: minmax(0, 1fr); } }
+.player.need .names .input#pname { border-color: #B3261E; box-shadow: 0 0 0 3px #F6C8C3; }
+.player .error:empty { display: none; }
+.tag { font-family: var(--f-pixel); font-size: 9px; background: var(--ink); color: var(--gold); padding: 6px 7px; align-self: flex-start; }
+.meter { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.meter-row { display: flex; justify-content: space-between; font-size: 15px; }
+.bar { height: 18px; border: 3px solid var(--ink); background: var(--white); display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 2px; padding: 2px; }
+.bar i { background: var(--paper-2); }
+.bar i.on { background: var(--grass); }
+
+/* board */
+.board-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+.board-head p { margin: 0; color: var(--ink); font-size: 15px; }
+.board {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
+  background: var(--ink); padding: 8px; border: 4px solid var(--ink); box-shadow: 5px 5px 0 rgba(43,29,18,.45);
+}
+.tile {
+  position: relative; aspect-ratio: 1 / 1.08; max-width: 100%;
+  border: 0; background: var(--paper); padding: 8px 6px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center;
+  min-width: 0;
+}
+.tile .num { position: absolute; top: 6px; left: 6px; font-family: var(--f-pixel); font-size: 8px; color: var(--muted); }
+.tile svg { width: 38%; height: auto; }
+.tile .name { font-size: clamp(13px, 3.6vw, 16px); line-height: 1.2; word-break: keep-all; }
+.tile.center { background: #FFE6CF; }
+.tile:hover:not(:disabled) { background: var(--white); }
+.tile.done { background: var(--grass); color: var(--white); }
+.tile.done .num { color: var(--ink); }
+.tile.done .name { text-shadow: 1px 1px 0 var(--ink); }
+.tile .stamp {
+  position: absolute; top: 4px; right: 4px; background: var(--gold); color: var(--ink);
+  font-family: var(--f-pixel); font-size: 7px; padding: 4px 4px; border: 2px solid var(--ink);
+}
+.tile.inline { box-shadow: inset 0 0 0 4px var(--gold); }
+.tile.pop { animation: pop .45s steps(4); }
+@keyframes pop { 0% { transform: scale(.8); } 60% { transform: scale(1.08); } 100% { transform: scale(1); } }
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 14px; color: var(--ink); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 14px; height: 14px; border: 2px solid var(--ink); display: inline-block; }
+
+/* gift */
+.gift { display: flex; flex-direction: column; gap: 12px; }
+.tiers { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.choices { display: flex; flex-direction: column; gap: 10px; }
+.choices input { position: absolute; opacity: 0; pointer-events: none; }
+.choices label { border: 4px solid var(--ink); background: var(--white); padding: 14px 16px; font-size: 19px; box-shadow: 3px 3px 0 var(--ink); cursor: pointer; display: flex; align-items: center; gap: 12px; }
+.choices label::before { content: ""; width: 20px; height: 20px; border: 3px solid var(--ink); background: var(--white); flex-shrink: 0; }
+.choices input:checked + label { background: var(--gold); transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+.choices input:checked + label::before { background: var(--grass); box-shadow: inset 0 0 0 3px var(--white); }
+.choices input:focus-visible + label { outline: 3px solid var(--quiz); outline-offset: 2px; }
+.ideas { display: flex; flex-wrap: wrap; gap: 8px; }
+.idea { border: 3px solid var(--ink); background: var(--white); padding: 8px 12px; font-size: 16px; min-height: 44px; }
+.idea.on { background: var(--gold); }
+.review-box { min-height: 150px; }
+.counter { align-self: flex-end; font-size: 14px; color: var(--muted); }
+.counter.ok { color: var(--grass-dk); }
+.tier { border: 3px solid var(--ink); background: var(--white); padding: 10px; display: flex; flex-direction: column; gap: 4px; }
+.tier .pixel-label { color: var(--muted); }
+.tier strong { font-family: var(--f-display); font-weight: 400; font-size: 19px; }
+.tier small { font-size: 14px; color: var(--muted); }
+.tier.ready { background: #FFF2B8; }
+.tier.got { background: var(--grass); color: var(--white); }
+.tier.got .pixel-label, .tier.got small { color: var(--white); }
+
+.foot { display: flex; justify-content: center; }
+.linkish { background: none; border: 0; text-decoration: underline; color: var(--ink); font-size: 14px; padding: 8px; }
+
+/* sheet */
+.overlay {
+  position: fixed; inset: 0; z-index: 20; background: rgba(43,29,18,.55);
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px);
+}
+.sheet {
+  width: 100%; max-width: 540px; max-height: 92%; overflow-y: auto;
+  background: var(--paper); border: 4px solid var(--ink); border-bottom: 0;
+  padding: 18px max(16px, env(safe-area-inset-left, 0px)) calc(22px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 14px;
+  animation: up .25s steps(5);
+}
+@keyframes up { from { transform: translateY(40px); } to { transform: none; } }
+.sheet-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.sheet-top .pixel-label { color: var(--leaf); }
+.sheet h3 { margin: 4px 0 0; font-family: var(--f-display); font-weight: 400; font-size: 26px; line-height: 1.2; text-wrap: balance; word-break: keep-all; }
+.sheet .desc { margin: 0; color: var(--muted); font-size: 16px; }
+.close { border: 3px solid var(--ink); background: var(--white); width: 44px; height: 44px; flex-shrink: 0; font-family: var(--f-pixel); font-size: 12px; }
+.hint { background: var(--white); border: 3px dashed var(--ink); padding: 10px 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.hint .jamo { font-family: var(--f-display); font-size: 26px; letter-spacing: 6px; color: var(--leaf); }
+.answer-row { display: flex; align-items: center; gap: 10px; }
+.answer-row .input { flex: 1; min-width: 0; }
+.answer-row .unit { font-size: 20px; flex-shrink: 0; }
+.feedback { margin: 0; font-family: var(--f-display); font-size: 22px; min-height: 1.3em; }
+.feedback.bad { color: #B3261E; }
+.feedback.good { color: var(--grass-dk); }
+.shake { animation: shake .35s steps(6); }
+@keyframes shake { 0%,100% { transform: none; } 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-4px); } }
+.photo-drop {
+  border: 4px dashed var(--ink); background: var(--white); min-height: 170px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 12px; text-align: center; cursor: pointer;
+}
+.photo-drop img { max-height: 260px; width: auto; border: 3px solid var(--ink); }
+.photo-drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.note { font-size: 14px; color: var(--muted); margin: 0; }
+
+/* reward */
+.reward { align-items: stretch; }
+.ticket { border: 4px solid var(--ink); background: var(--white); padding: 16px; display: flex; flex-direction: column; gap: 10px; align-items: center; text-align: center; }
+.ticket .big { font-family: var(--f-display); font-size: 30px; line-height: 1.15; }
+.ticket .row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.ticket .done-stamp { border: 4px solid var(--leaf); color: var(--leaf); font-family: var(--f-display); font-size: 24px; padding: 4px 14px; transform: rotate(-6deg); }
+.staff { border-top: 4px dashed var(--ink); padding-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+.staff .pin { letter-spacing: 10px; text-align: center; font-family: var(--f-pixel); font-size: 18px; }
+
+/* toast + confetti */
+.toast {
+  position: fixed; left: 50%; top: calc(18px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); z-index: 30;
+  background: var(--gold); border: 4px solid var(--ink); box-shadow: 4px 4px 0 var(--ink);
+  padding: 10px 18px; font-family: var(--f-display); font-size: 24px; white-space: nowrap;
+}
+.confetti { position: fixed; inset: 0; pointer-events: none; z-index: 25; overflow: hidden; }
+.confetti i { position: absolute; top: -12px; width: 10px; height: 10px; animation: fall 1.4s steps(14) forwards; }
+@keyframes fall { to { transform: translateY(105vh) rotate(180deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .tile.pop, .sheet, .shake, .confetti i { animation: none !important; }
+  .confetti { display: none; }
+}
+.busy { position: fixed; inset: 0; z-index: 40; background: rgba(43,29,18,.45); display: flex; align-items: center; justify-content: center; }
+.busy span { background: var(--paper); border: 4px solid var(--ink); box-shadow: 4px 4px 0 var(--ink); padding: 14px 20px; font-family: var(--f-display); font-size: 22px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="scene">
+    <canvas id="scene" width="180" height="96" aria-hidden="true"></canvas>
+    <div class="hud">
+      <span class="chip">STAGE <b>노을공원</b></span>
+      <span class="chip">SCORE <b id="score">0000</b></span>
+    </div>
+    <div class="title-block">
+      <span class="kicker">본그룹</span>
+      <h1>노을공원 나무심기<br><span class="hl">봉사활동 빙고</span></h1>
+    </div>
+  </div>
+
+  <div id="game" style="display: flex; flex-direction: column; gap: 18px">
+    <section class="panel player" id="playerPanel">
+      <div class="names">
+        <div class="field">
+          <label for="pname">내 이름</label>
+          <input class="input" id="pname" autocomplete="off" maxlength="20" placeholder="예: 김봉사">
+        </div>
+        <div class="field">
+          <label for="pfamily">자녀 이름 <small>(함께 왔다면)</small></label>
+          <input class="input" id="pfamily" autocomplete="off" maxlength="60" placeholder="예: 김나무, 김숲">
+        </div>
+      </div>
+      <p class="error" id="nameErr" aria-live="polite"></p>
+      <div class="meter">
+        <div class="meter-row"><span>미션 <b id="doneCount">0</b> / 9</span><span>빙고 <b id="lineCount">0</b>줄</span></div>
+        <div class="bar" id="bar" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 10px">
+      <div class="board-head">
+        <h2 class="section-title" style="color: var(--white); text-shadow: 2px 2px 0 var(--ink)">미션 보드</h2>
+        <p>칸을 눌러 미션 도전</p>
+      </div>
+      <div class="board" id="board"></div>
+      <div class="legend">
+        <span><i style="background: var(--grass)"></i>완료</span>
+        <span><i style="background: var(--paper); box-shadow: inset 0 0 0 3px var(--gold)"></i>빙고 줄</span>
+        <span><i style="background: #FFE6CF"></i>핵심 미션</span>
+      </div>
+    </section>
+
+    <section class="panel gift">
+      <h2 class="section-title">선물 교환소</h2>
+      <div class="tiers" id="tiers"></div>
+      <button class="btn blue block" id="giftBtn" type="button">선물 교환하기</button>
+      <p class="note" id="giftNote"></p>
+    </section>
+  </div>
+</div>
+
+<div id="overlay" class="overlay" hidden></div>
+<div id="toastHost"></div>
+
+<script>
+(function () {
+  // 스태프 번호는 서버(Code.gs)의 CONFIG.STAFF_PIN 에서 바꿔요.
+  var STORE_KEY = 'bon-noeul-bingo-v2';
+
+  // ===== 서버 호출 =====
+  // ▼ Apps Script 웹 앱 URL(…/exec)을 여기에 붙여 넣으세요
+  var API_URL = 'PASTE_YOUR_WEB_APP_URL_HERE';
+
+  function call(fn) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    if (!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(API_URL)) {
+      return Promise.reject(new Error('서버 주소가 아직 설정되지 않았어요. 스태프에게 알려 주세요.'));
+    }
+    return fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: fn, args: args }),
+      redirect: 'follow'
+    }).then(function (r) {
+      if (!r.ok) throw new Error('');
+      return r.json();
+    }).then(function (j) {
+      if (!j || !j.ok) throw new Error((j && j.error) || '');
+      return j.data;
+    });
+  }
+  function errMsg(e) {
+    var m = (e && e.message) || '';
+    if (/Exception:\s*/.test(m)) m = m.replace(/^.*Exception:\s*/, '');
+    return m && /[가-힣]/.test(m) ? m : '저장하지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요.';
+  }
+  var busyEl = null;
+  function busy(on, text) {
+    if (on) {
+      if (!busyEl) { busyEl = document.createElement('div'); busyEl.className = 'busy'; busyEl.setAttribute('role', 'status'); busyEl.innerHTML = '<span></span>'; document.body.appendChild(busyEl); }
+      busyEl.firstChild.textContent = text || '저장 중...';
+    } else if (busyEl) { busyEl.remove(); busyEl = null; }
+  }
+  function applyServer(st) {
+    if (!st) return;
+    S.done = st.done || {};
+    S.gift = st.gift || null;
+    save();
+  }
+
+  // 보기 문구는 서버(Code.gs)의 REJOIN_OPTIONS 와 똑같아야 해요
+  var REJOIN_OPTIONS = ['꼭 다시 참여할래요', '일정이 맞으면 참여할래요', '아직 잘 모르겠어요'];
+  var IDEA_EXAMPLES = ['보물찾기', '줍깅', '숲 해설 탐방', '곤충·새 관찰', '새집 달기', '가족 피크닉'];
+  var REVIEW_MIN_CHARS = 40;
+
+  var MISSIONS = [
+    { id: 1, kind: 'photo', icon: 'leaf', short: '예쁜 낙엽', title: '가장 예쁜 낙엽을 찾아라!', desc: '공원에서 가장 예쁜 낙엽을 찾아 사진을 찍어요.' },
+    { id: 2, kind: 'choice', icon: 'cal', short: '또 참여?', title: '다음 봉사활동에도 또 참여할까요?', desc: '마음에 가까운 것을 하나 골라 주세요.' },
+    { id: 3, kind: 'text', icon: 'heart', short: '새 친구', title: '오늘 처음 만난 사람의 이름은?', desc: '인사하고 하이파이브까지 하면 성공!', placeholder: '이름' },
+    { id: 4, kind: 'quiz', icon: 'quiz', short: '공원 퀴즈', title: '노을공원은 무엇으로 만들어진 산일까요?', desc: '오래전 이곳에는 큰 비밀이 숨어 있었어요.', hint: 'ㅆㄹㄱ', answer: ['쓰레기', '쓰레기산', '쓰레기더미'] },
+    { id: 5, kind: 'trees', icon: 'tree', short: '나무 심기', title: '오늘 우리가 심은 나무는 몇 그루?', desc: '내가 심은 나무에게 이름도 지어 주세요.', center: true },
+    { id: 6, kind: 'idea', icon: 'star', short: '하고 싶은 것', title: '다음에 노을공원에서 해보고 싶은 것은?', desc: '무엇이든 자유롭게 적어 주세요. 예시를 눌러도 돼요.' },
+    { id: 7, kind: 'photo', icon: 'camera', short: '함께 사진', title: '함께 온 사람들과 사진 찰칵!', desc: '혼자 왔다면 오늘 만난 새 친구와 함께 찍어요.', note: '* 이 사진은 행사 후기로 활용될 수 있어요.' },
+    { id: 8, kind: 'quiz', icon: 'quiz', short: '단체 이름', title: '오늘 우리와 함께한 단체의 이름은?', desc: '활동을 안내해 주신 분들이에요.', hint: 'ㄴㅇㄱㅇ ㅅㅁㅁㅇ', answer: ['노을공원시민모임'] },
+    { id: 9, kind: 'review', icon: 'pencil', short: '참여소감', title: '오늘 봉사활동 참여소감을 들려주세요', desc: '느낀 점, 재미있었던 순간, 아쉬웠던 점을 3줄 이상 적어 주세요.' }
+  ];
+  function reviewStat(t) {
+    var lines = String(t || '').split(/\n/).filter(function (s) { return s.trim(); }).length;
+    var chars = String(t || '').replace(/\s/g, '').length;
+    return { lines: lines, chars: chars, ok: lines >= 3 || chars >= REVIEW_MIN_CHARS };
+  }
+  var LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+  // ===== 픽셀 아이콘 =====
+  var PAL = { k: '#2B1D12', g: '#5DBB4A', G: '#2F7D32', b: '#8B5A2B', w: '#FFFFFF', o: '#E0581F', y: '#FFD23F', q: '#2F62C9', r: '#E5484D', s: '#9ED8F5' };
+  var ICONS = {
+    tree: ['...kkkk...','..kggggk..','.kgGggGgk.','kggggggGgk','kgGgggggGk','.kggGgggk.','..kkkkkk..','....kb....','....kb....','...kkkk...'],
+    camera: ['..kkk.....','.kkkkkkkk.','kwwwkkwwwk','kwwk..kwwk','kwk.ss.kwk','kwk.ss.kwk','kwwk..kwwk','kwwwkkwwwk','.kkkkkkkk.','..........'],
+    quiz: ['...kkkk...','..kqqqqk..','.kqqkkqqk.','..kk.kqqk.','.....kqqk.','....kqqk..','....kqk...','....kkk...','....kqk...','....kkk...'],
+    leaf: ['......kk..','....kkok..','...kooook.','..kooyook.','.koooyok..','.kooyook..','.koyook...','..kykk....','.ky.......','k.........'],
+    heart: ['..........','.kk...kk..','krrk.krrk.','krrrkrrrk.','krrrrrrrk.','.krrrrrk..','..krrrk...','...krk....','....k.....','..........'],
+    pencil: ['........kk','.......kyk','......kyyk','.....kyyk.','....kyyk..','...kyyk...','..kyyk....','.kwwk.....','.kkk......','..........'],
+    star: ['....kk....','...kyyk...','kkkkyykkkk','kyyyyyyyyk','.kyyyyyyk.','..kyyyyk..','.kyykkyyk.','.kyk..kyk.','kkk....kkk','..........'],
+    cal: ['.k.....k..','kkkkkkkkk.','krrrrrrrk.','kkkkkkkkk.','kwwwwwwgk.','kwwwwwggk.','kgwwwggwk.','kggwggwwk.','kwgggwwwk.','kkkkkkkkk.']
+  };
+  function icon(name) {
+    var rows = ICONS[name], out = '';
+    for (var y = 0; y < rows.length; y++) for (var x = 0; x < rows[y].length; x++) {
+      var c = rows[y].charAt(x);
+      if (c !== '.' && PAL[c]) out += '<rect x="' + x + '" y="' + y + '" width="1" height="1" fill="' + PAL[c] + '"/>';
+    }
+    return '<svg viewBox="0 0 10 10" shape-rendering="crispEdges" aria-hidden="true">' + out + '</svg>';
+  }
+
+  // ===== 저장 =====
+  function blank() { return { id: null, mode: null, name: '', family: '', done: {}, answers: {}, gift: null }; }
+  var S = blank();
+  try { var raw = localStorage.getItem(STORE_KEY); if (raw) { var p = JSON.parse(raw); if (p && typeof p === 'object') S = Object.assign(blank(), p); } } catch (e) {}
+  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) {} }
+
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function norm(t) { return String(t || '').replace(/\s+/g, '').trim(); }
+  function $(id) { return document.getElementById(id); }
+
+  function doneList() { return MISSIONS.map(function (m) { return !!S.done[m.id]; }); }
+  function lineInfo() {
+    var d = doneList(), cells = {}, n = 0;
+    LINES.forEach(function (L) { if (d[L[0]] && d[L[1]] && d[L[2]]) { n++; L.forEach(function (i) { cells[i] = true; }); } });
+    return { count: n, cells: cells };
+  }
+  function doneCount() { return doneList().filter(Boolean).length; }
+
+  // ===== 배경 =====
+  function drawScene() {
+    var c = $('scene'), x = c.getContext('2d'), W = c.width, H = c.height;
+    var bands = ['#9ED8F5', '#B5E0F2', '#FFD9A8', '#FFC27A', '#FFA65C'];
+    for (var i = 0; i < bands.length; i++) { x.fillStyle = bands[i]; x.fillRect(0, i * 12, W, 12); }
+    x.fillStyle = '#FF8A3D';
+    for (var r = 14; r >= 0; r--) { var w = Math.round(Math.sqrt(14 * 14 - r * r)); x.fillRect(140 - w, 60 - r, w * 2, 1); }
+    x.fillStyle = '#FFE08A'; x.fillRect(130, 50, 4, 2); x.fillRect(146, 52, 3, 2);
+    x.fillStyle = '#FFFFFF'; [[18, 50, 14], [64, 46, 10]].forEach(function (cl) { x.fillRect(cl[0], cl[1], cl[2], 3); x.fillRect(cl[0] + 3, cl[1] - 2, cl[2] - 6, 2); });
+    // hill (the park mountain)
+    x.fillStyle = '#7CC95E';
+    for (var px = 0; px < W; px++) { var h = 70 - Math.round(12 * Math.exp(-Math.pow((px - 70) / 45, 2))); x.fillRect(px, h, 1, H - h); }
+    x.fillStyle = '#5DBB4A'; x.fillRect(0, 80, W, H - 80);
+    x.fillStyle = '#4FA83E'; for (var gx = 0; gx < W; gx += 6) x.fillRect(gx, 80, 3, 1);
+    // autumn trees
+    var cols = ['#E0581F', '#F2A93B', '#C7362B', '#FFD23F', '#2F7D32', '#E0581F', '#F2A93B'];
+    var spots = [8, 24, 38, 100, 116, 160, 174];
+    spots.forEach(function (tx, k) {
+      var base = 82, ch = cols[k % cols.length];
+      x.fillStyle = '#6B3F1E'; x.fillRect(tx, base - 6, 2, 6);
+      x.fillStyle = ch; x.fillRect(tx - 4, base - 14, 10, 7); x.fillRect(tx - 2, base - 17, 6, 3); x.fillRect(tx - 3, base - 7, 8, 1);
+      x.fillStyle = '#2B1D12'; x.fillRect(tx - 4, base - 14, 1, 7); x.fillRect(tx + 5, base - 14, 1, 7);
+    });
+    // saplings in the middle (today's planting)
+    for (var s = 0; s < 4; s++) { var sx = 56 + s * 10; x.fillStyle = '#6B3F1E'; x.fillRect(sx, 84, 1, 4); x.fillStyle = '#2F7D32'; x.fillRect(sx - 1, 82, 3, 2); x.fillStyle = '#8B5A2B'; x.fillRect(sx - 2, 88, 5, 1); }
+  }
+
+  // ===== 렌더 =====
+  function render() {
+    var li = lineInfo(), dc = doneCount();
+    var score = dc * 100 + li.count * 300 + (dc === 9 ? 1000 : 0);
+    $('score').textContent = ('0000' + score).slice(-4);
+
+    if (document.activeElement !== $('pname')) $('pname').value = S.name || '';
+    if (document.activeElement !== $('pfamily')) $('pfamily').value = S.family || '';
+    $('pname').disabled = $('pfamily').disabled = !!S.gift;
+    $('doneCount').textContent = dc;
+    $('lineCount').textContent = li.count;
+    $('bar').innerHTML = MISSIONS.map(function (m, i) { return '<i class="' + (i < dc ? 'on' : '') + '"></i>'; }).join('');
+
+    $('board').innerHTML = MISSIONS.map(function (m, i) {
+      var d = !!S.done[m.id];
+      var cls = 'tile' + (m.center ? ' center' : '') + (d ? ' done' : '') + (li.cells[i] ? ' inline' : '');
+      return '<button type="button" class="' + cls + '" data-i="' + i + '" aria-label="미션 ' + m.id + ' ' + esc(m.short) + (d ? ' 완료' : '') + '">' +
+        '<span class="num">' + (m.id < 10 ? '0' : '') + m.id + '</span>' +
+        (d ? '<span class="stamp">CLEAR</span>' : '') +
+        icon(m.icon) + '<span class="name">' + esc(m.short) + '</span></button>';
+    }).join('');
+
+    var allReady = dc === 9;
+    var cls = 'tier' + (S.gift ? ' got' : (allReady ? ' ready' : ''));
+    var status = S.gift ? '교환 완료 ' + timeStr(S.gift) : (allReady ? '교환 가능' : '남은 미션 ' + (9 - dc) + '개');
+    $('tiers').innerHTML = '<div class="' + cls + '"><span class="pixel-label">ALL CLEAR</span><strong>9칸 올빙고 선물</strong><small>' + esc(status) + '</small></div>';
+    $('giftBtn').disabled = !(allReady && !S.gift);
+    $('giftNote').textContent = S.gift ? '선물을 받았어요. 함께해 줘서 고마워요!'
+      : allReady ? '스태프에게 이 화면을 보여 주고 버튼을 눌러요.'
+      : '9칸 미션을 모두 완료하면 선물을 받을 수 있어요.';
+  }
+  function timeStr(t) { try { var d = new Date(t); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); } catch (e) { return ''; } }
+
+  // ===== 이름 (빙고판 위에서 바로 입력) =====
+  function modeOf() { return S.family ? 'family' : 'solo'; }
+  function needName() {
+    $('playerPanel').classList.add('need');
+    $('nameErr').textContent = '먼저 내 이름을 적어 주세요.';
+    $('playerPanel').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(function () { $('pname').focus(); }, 250);
+  }
+  var profileTimer = null;
+  function onNameInput() {
+    S.name = $('pname').value.trim();
+    S.family = $('pfamily').value.trim();
+    S.mode = modeOf();
+    save();
+    if (S.name) { $('playerPanel').classList.remove('need'); $('nameErr').textContent = ''; }
+    if (S.id && S.name) {
+      clearTimeout(profileTimer);
+      profileTimer = setTimeout(function () {
+        call('updateProfile', S.id, { name: S.name, family: S.family }).catch(function () {});
+      }, 900);
+    }
+  }
+  $('pname').addEventListener('input', onNameInput);
+  $('pfamily').addEventListener('input', onNameInput);
+
+  // 첫 미션을 저장할 때 참가 기록을 만들어요
+  function ensureRegistered() {
+    if (S.id) return Promise.resolve(S.id);
+    return call('register', { mode: modeOf(), name: S.name, family: S.family }).then(function (st) {
+      S.id = st.id; save(); return S.id;
+    });
+  }
+
+  // ===== 미션 시트 =====
+  var overlay = $('overlay');
+  function openSheet(html, onMount) {
+    overlay.innerHTML = '<div class="sheet" role="dialog" aria-modal="true">' + html + '</div>';
+    overlay.hidden = false;
+    document.body.style.overflow = 'hidden';
+    var c = overlay.querySelector('[data-close]'); if (c) c.addEventListener('click', closeSheet);
+    if (onMount) onMount(overlay.querySelector('.sheet'));
+  }
+  function closeSheet() { overlay.hidden = true; overlay.innerHTML = ''; document.body.style.overflow = ''; }
+  overlay.addEventListener('click', function (e) { if (e.target === overlay) closeSheet(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !overlay.hidden) closeSheet(); });
+
+  function head(m) {
+    return '<div class="sheet-top"><div><span class="pixel-label">MISSION ' + (m.id < 10 ? '0' : '') + m.id + '</span><h3>' + esc(m.title) + '</h3></div>' +
+      '<button class="close" type="button" data-close aria-label="닫기">X</button></div><p class="desc">' + esc(m.desc) + '</p>';
+  }
+
+  $('board').addEventListener('click', function (e) {
+    var t = e.target.closest('.tile'); if (!t) return;
+    if (!S.name) { needName(); return; }
+    openMission(MISSIONS[+t.getAttribute('data-i')]);
+  });
+
+  function openMission(m) {
+    var a = S.answers[m.id] || {};
+    var locked = !!S.gift;
+    var dis = locked ? ' disabled' : '';
+    var body = '';
+    if (m.kind === 'photo') {
+      body = '<label class="photo-drop" for="m-photo">' +
+        (a.photo ? '<img id="m-prev" src="' + a.photo + '" alt="내가 찍은 사진">' : '<span id="m-prev-wrap">' + icon(m.icon).replace('<svg ', '<svg width="64" height="64" ') + '</span>') +
+        '<span>' + (a.photo ? '다른 사진으로 바꾸려면 누르세요' : '여기를 눌러 사진 찍기') + '</span>' +
+        '<input type="file" id="m-photo" accept="image/*" capture="environment"' + dis + '></label>' +
+        (m.note ? '<p class="note">' + esc(m.note) + '</p>' : '');
+    } else if (m.kind === 'quiz') {
+      body = (m.hint ? '<div class="hint"><span>힌트</span><span class="jamo" id="m-hint" hidden>' + esc(m.hint) + '</span><button type="button" class="btn ghost" id="m-hintbtn" style="padding: 6px 12px; font-size: 16px; box-shadow: 2px 2px 0 var(--ink)">힌트 보기</button></div>' : '') +
+        '<div class="answer-row"><input class="input" id="m-ans" autocomplete="off" maxlength="30"' + (m.inputmode ? ' inputmode="' + m.inputmode + '"' : '') + ' value="' + esc(a.text) + '" aria-label="정답"' + dis + '>' + (m.unit ? '<span class="unit">' + esc(m.unit) + '</span>' : '') + '</div>' +
+        '<p class="feedback" id="m-fb" aria-live="polite"></p>';
+    } else if (m.kind === 'text') {
+      body = '<div class="field"><label for="m-ans">' + esc(m.placeholder) + '</label><input class="input" id="m-ans" autocomplete="off" maxlength="40" value="' + esc(a.text) + '"' + dis + '></div>';
+    } else if (m.kind === 'trees') {
+      body = '<div class="answer-row"><input class="input" id="m-ans" inputmode="numeric" maxlength="3" value="' + esc(a.text) + '" aria-label="심은 나무 수"' + dis + '><span class="unit">그루</span></div>' +
+        '<div class="field"><label for="m-ans2">나무 이름</label><input class="input" id="m-ans2" autocomplete="off" maxlength="20" placeholder="예: 쑥쑥이" value="' + esc(a.text2) + '"' + dis + '></div>';
+    } else if (m.kind === 'choice') {
+      body = '<div class="choices" role="radiogroup" aria-label="다음 참여 의향">' + REJOIN_OPTIONS.map(function (o, k) {
+        return '<input type="radio" name="m-choice" id="m-choice-' + k + '" value="' + esc(o) + '"' + (a.text === o ? ' checked' : '') + dis + '>' +
+          '<label for="m-choice-' + k + '">' + esc(o) + '</label>';
+      }).join('') + '</div>';
+    } else if (m.kind === 'idea') {
+      body = '<div class="ideas" aria-label="예시">' + IDEA_EXAMPLES.map(function (x) {
+        return '<button type="button" class="idea" data-idea="' + esc(x) + '"' + dis + '>' + esc(x) + '</button>';
+      }).join('') + '</div>' +
+        '<div class="field"><label for="m-ans">해보고 싶은 것</label><textarea class="input" id="m-ans" maxlength="300" placeholder="예: 아이들과 보물찾기를 해보고 싶어요"' + dis + '>' + esc(a.text) + '</textarea></div>';
+    } else {
+      var rs = reviewStat(a.text);
+      body = '<div class="field"><label for="m-ans">참여소감 (3줄 이상)</label><textarea class="input review-box" id="m-ans" maxlength="1000" placeholder="오늘 처음 나무를 심어 봤는데...&#10;아이와 함께 흙을 덮으면서...&#10;다음에는..."' + dis + '>' + esc(a.text) + '</textarea>' +
+        '<span class="counter' + (rs.ok ? ' ok' : '') + '" id="m-count" aria-live="polite">' + rs.lines + '줄 · ' + rs.chars + '자</span></div>';
+    }
+    var cta = locked ? '<p class="note">선물을 받은 뒤에는 미션을 바꿀 수 없어요.</p>'
+      : '<p class="error" id="m-err"></p><button type="button" class="btn green block" id="m-go">' + (m.kind === 'quiz' ? '정답 확인' : (S.done[m.id] ? '다시 저장' : '미션 완료!')) + '</button>';
+
+    openSheet(head(m) + body + cta, function (sheet) {
+      var hb = $('m-hintbtn'); if (hb) hb.addEventListener('click', function () { $('m-hint').hidden = false; hb.hidden = true; });
+      sheet.querySelectorAll('.idea').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var ta = $('m-ans'), word = b.getAttribute('data-idea');
+          var cur = ta.value.trim();
+          if (cur.indexOf(word) < 0) ta.value = cur ? cur + ', ' + word : word;
+          b.classList.add('on'); ta.focus();
+        });
+      });
+      var rbox = sheet.querySelector('.review-box');
+      if (rbox) rbox.addEventListener('input', function () {
+        var st = reviewStat(rbox.value), c = $('m-count');
+        c.textContent = st.lines + '줄 · ' + st.chars + '자'; c.classList.toggle('ok', st.ok);
+      });
+      var photoData = a.photo || null;
+      var fi = $('m-photo');
+      if (fi) fi.addEventListener('change', function () {
+        var f = fi.files && fi.files[0]; if (!f) return;
+        shrink(f, function (url) {
+          if (!url) { var e2 = $('m-err'); if (e2) e2.textContent = '이 사진은 열 수 없어요. 다시 찍어 주세요.'; return; }
+          photoData = url;
+          var old = $('m-prev') || $('m-prev-wrap');
+          var img = document.createElement('img'); img.id = 'm-prev'; img.alt = '내가 찍은 사진'; img.src = url;
+          old.replaceWith(img);
+        });
+      });
+      var go = $('m-go'); if (!go) return;
+      go.addEventListener('click', function () {
+        var err = $('m-err'); err.textContent = '';
+        var v = $('m-ans') ? $('m-ans').value.trim() : '';
+        if (m.kind === 'photo') {
+          if (!photoData) { err.textContent = '사진을 먼저 찍어 주세요.'; return; }
+          complete(m, { photo: photoData });
+        } else if (m.kind === 'quiz') {
+          var fb = $('m-fb');
+          if (!v) { fb.className = 'feedback bad'; fb.textContent = '정답을 적어 주세요.'; return; }
+          var ok = !m.answer || m.answer.some(function (x) { return norm(x) === norm(v); });
+          if (!ok) {
+            fb.className = 'feedback bad'; fb.textContent = '땡! 다시 도전해 봐요';
+            var row = sheet.querySelector('.answer-row'); row.classList.remove('shake'); void row.offsetWidth; row.classList.add('shake');
+            return;
+          }
+          fb.className = 'feedback good'; fb.textContent = '딩동댕! 정답이에요';
+          go.disabled = true;
+          setTimeout(function () { complete(m, { text: v }); }, 650);
+        } else if (m.kind === 'trees') {
+          var v2 = $('m-ans2').value.trim();
+          if (!/^\d+$/.test(v) || +v < 1) { err.textContent = '심은 나무 수를 숫자로 적어 주세요.'; return; }
+          if (!v2) { err.textContent = '나무에게 이름을 지어 주세요.'; return; }
+          complete(m, { text: v, text2: v2 });
+        } else if (m.kind === 'choice') {
+          var pick = sheet.querySelector('input[name="m-choice"]:checked');
+          if (!pick) { err.textContent = '하나를 골라 주세요.'; return; }
+          complete(m, { text: pick.value });
+        } else if (m.kind === 'review') {
+          if (!reviewStat(v).ok) { err.textContent = '조금만 더 적어 주세요. 3줄 이상(또는 ' + REVIEW_MIN_CHARS + '자 이상)이면 돼요.'; return; }
+          complete(m, { text: v });
+        } else {
+          if (!v) { err.textContent = '한 글자라도 적어 주세요.'; return; }
+          complete(m, { text: v });
+        }
+      });
+    });
+  }
+
+  function shrink(file, cb) {
+    var r = new FileReader();
+    r.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        var max = 520, w = img.width, h = img.height, k = Math.min(1, max / Math.max(w, h));
+        var c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        try { cb(c.toDataURL('image/jpeg', 0.72)); } catch (e) { cb(r.result); }
+      };
+      img.onerror = function () { cb(null); };
+      img.src = r.result;
+    };
+    r.readAsDataURL(file);
+  }
+
+  function complete(m, ans) {
+    var before = lineInfo().count, wasAll = doneCount() === 9;
+    var go = $('m-go'); if (go) go.disabled = true;
+    busy(true, m.kind === 'photo' ? '사진 올리는 중...' : '저장 중...');
+    ensureRegistered().then(function (id) {
+      return call('saveMission', id, m.id, ans);
+    }).then(function (st) {
+      busy(false);
+      S.answers[m.id] = ans;
+      applyServer(st); S.done[m.id] = true; save();
+      closeSheet(); render(); celebrate(m, before, wasAll);
+    }).catch(function (e) {
+      busy(false);
+      if (go) go.disabled = false;
+      var err = $('m-err'); if (err) err.textContent = errMsg(e);
+    });
+  }
+  function celebrate(m, before, wasAll) {
+    var t = document.querySelector('.tile[data-i="' + (m.id - 1) + '"]'); if (t) t.classList.add('pop');
+    var li = lineInfo();
+    if (doneCount() === 9 && !wasAll) { toast('ALL CLEAR! 올빙고'); confetti(60); }
+    else if (li.count > before) { toast('BINGO! ' + li.count + '줄 완성'); confetti(36); }
+    else toast('MISSION CLEAR');
+  }
+
+  function toast(msg) {
+    var el = document.createElement('div'); el.className = 'toast'; el.setAttribute('role', 'status'); el.textContent = msg;
+    $('toastHost').appendChild(el); setTimeout(function () { el.remove(); }, 1700);
+  }
+  function confetti(n) {
+    var box = document.createElement('div'); box.className = 'confetti'; box.setAttribute('aria-hidden', 'true');
+    var cs = ['#FFD23F', '#E0581F', '#5DBB4A', '#2F62C9', '#E5484D', '#FFFFFF'];
+    for (var i = 0; i < n; i++) {
+      var p = document.createElement('i');
+      p.style.left = Math.random() * 100 + '%'; p.style.background = cs[i % cs.length];
+      p.style.animationDelay = (Math.random() * 0.5) + 's';
+      box.appendChild(p);
+    }
+    document.body.appendChild(box); setTimeout(function () { box.remove(); }, 2200);
+  }
+
+  // ===== 선물 교환 =====
+  $('giftBtn').addEventListener('click', function () {
+    var li = lineInfo(), dc = doneCount();
+    if (dc < 9 || S.gift) return;
+    var tierName = '9칸 올빙고 선물';
+    var who = S.name;
+    openSheet(
+      '<div class="sheet-top"><div><span class="pixel-label">GIFT COUNTER</span><h3>선물 교환</h3></div><button class="close" type="button" data-close aria-label="닫기">X</button></div>' +
+      '<div class="ticket"><span class="pixel-label">' + (S.family ? 'FAMILY' : 'SOLO') + '</span><span class="big">' + esc(who) + '</span>' +
+      (S.family ? '<span>자녀 ' + esc(S.family) + '</span>' : '') +
+      '<div class="row"><span class="chip">LINES <b>' + li.count + '</b></span><span class="chip">CLEAR <b>' + dc + '/9</b></span></div>' +
+      '<strong style="font-family: var(--f-display); font-weight: 400; font-size: 22px; color: var(--leaf)">' + tierName + '</strong></div>' +
+      '<div class="staff"><span class="pixel-label">STAFF ONLY</span><label for="g-pin">사회공헌팀 스태프 비밀번호</label>' +
+      '<input class="input pin" id="g-pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off">' +
+      '<p class="error" id="g-err"></p><button type="button" class="btn blue block" id="g-go">선물 지급 완료</button></div>',
+      function () {
+        $('g-go').addEventListener('click', function () {
+          var err = $('g-err'); err.textContent = '';
+          var pin = $('g-pin').value.trim();
+          if (!pin) { err.textContent = '스태프가 비밀번호를 입력해 주세요.'; return; }
+          var btn = $('g-go'); btn.disabled = true;
+          busy(true, '확인 중...');
+          call('redeem', S.id, pin).then(function (res) {
+            busy(false); btn.disabled = false;
+            if (!res || !res.ok) {
+              var code = res && res.error;
+              if (res && res.state) { applyServer(res.state); render(); }
+              err.textContent = code === 'pin' ? '비밀번호가 맞지 않아요. 스태프가 입력해 주세요.'
+                : code === 'already' ? '이미 선물을 받은 기록이 있어요.'
+                : code === 'notready' ? '아직 9칸을 모두 채우지 않았어요.'
+                : '참가 기록을 찾을 수 없어요. 스태프에게 알려 주세요.';
+              return;
+            }
+            applyServer(res.state); render();
+            showDone(res.at);
+          }).catch(function (e) { busy(false); btn.disabled = false; err.textContent = errMsg(e); });
+        });
+      }
+    );
+    function showDone(now) {
+          openSheet(
+            '<div class="sheet-top"><div><span class="pixel-label">GIFT COUNTER</span><h3>교환 완료</h3></div><button class="close" type="button" data-close aria-label="닫기">X</button></div>' +
+            '<div class="ticket"><span class="big">' + esc(who) + '</span><span class="done-stamp">지급 완료 ' + timeStr(now) + '</span>' +
+            '<strong style="font-family: var(--f-display); font-weight: 400; font-size: 20px">' + tierName + '</strong>' +
+            '<p class="note" style="margin: 0">숲을 지켜 줘서 고마워요!</p></div>' +
+            '<button type="button" class="btn green block" data-close>보드로 돌아가기</button>',
+            function (sh) { sh.querySelectorAll('[data-close]').forEach(function (b) { b.addEventListener('click', closeSheet); }); }
+          );
+          confetti(60);
+    }
+  });
+
+  drawScene();
+  render();
+  // 다시 들어왔을 때 시트 기록과 맞추기 (선물 지급 여부 등)
+  if (S.id) {
+    call('getState', S.id).then(function (st) { if (st) { applyServer(st); render(); } }).catch(function () {});
+  }
+})();
+</script>
+</body>
+</html>
