@@ -136,6 +136,12 @@ textarea.input { resize: vertical; min-height: 110px; }
 .tag { font-family: var(--f-pixel); font-size: 9px; background: var(--ink); color: var(--gold); padding: 6px 7px; align-self: flex-start; }
 .meter { display: flex; flex-direction: column; gap: 6px; width: 100%; }
 .meter-row { display: flex; justify-content: space-between; font-size: 15px; }
+.sync { margin: 0; font-size: 14px; color: var(--grass-dk); min-height: 1.2em; }
+.sync:empty { display: none; }
+.sync.busy { color: var(--muted); }
+.sync.busy::before { content: ""; display: inline-block; width: 8px; height: 8px; background: var(--leaf); margin-right: 6px; vertical-align: 1px; animation: blink 1s steps(2) infinite; }
+.sync.bad { color: #B3261E; }
+@keyframes blink { 50% { opacity: 0; } }
 .bar { height: 18px; border: 3px solid var(--ink); background: var(--white); display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 2px; padding: 2px; }
 .bar i { background: var(--paper-2); }
 .bar i.on { background: var(--grass); }
@@ -294,6 +300,7 @@ textarea.input { resize: vertical; min-height: 110px; }
       <div class="meter">
         <div class="meter-row"><span>미션 <b id="doneCount">0</b> / 9</span><span>빙고 <b id="lineCount">0</b>줄</span></div>
         <div class="bar" id="bar" aria-hidden="true"></div>
+        <p class="sync" id="syncState" role="status" aria-live="polite"></p>
       </div>
     </section>
 
@@ -366,8 +373,11 @@ textarea.input { resize: vertical; min-height: 110px; }
   }
   function applyServer(st) {
     if (!st) return;
-    S.done = st.done || {};
+    var d = Object.assign({}, st.done || {});
+    (S.pending || []).forEach(function (j) { if (!j.photo) d[j.mid] = true; });
+    S.done = d;
     S.gift = st.gift || null;
+    if (st.id) S.id = st.id;
     save();
   }
 
@@ -416,9 +426,10 @@ textarea.input { resize: vertical; min-height: 110px; }
   }
 
   // ===== 저장 =====
-  function blank() { return { id: null, mode: null, name: '', family: '', done: {}, answers: {}, gift: null }; }
+  function blank() { return { id: null, mode: null, name: '', family: '', done: {}, answers: {}, gift: null, pending: [] }; }
   var S = blank();
   try { var raw = localStorage.getItem(STORE_KEY); if (raw) { var p = JSON.parse(raw); if (p && typeof p === 'object') S = Object.assign(blank(), p); } } catch (e) {}
+  if (!Array.isArray(S.pending)) S.pending = [];
   function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) {} }
 
   function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -490,6 +501,7 @@ textarea.input { resize: vertical; min-height: 110px; }
     $('giftNote').textContent = S.gift ? '선물을 받았어요. 함께해 줘서 고마워요!'
       : allReady ? '스태프에게 이 화면을 보여 주고 버튼을 눌러요.'
       : '9칸 미션을 모두 완료하면 선물을 받을 수 있어요.';
+    renderSync();
   }
   function timeStr(t) { try { var d = new Date(t); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); } catch (e) { return ''; } }
 
@@ -518,13 +530,64 @@ textarea.input { resize: vertical; min-height: 110px; }
   $('pname').addEventListener('input', onNameInput);
   $('pfamily').addEventListener('input', onNameInput);
 
-  // 첫 미션을 저장할 때 참가 기록을 만들어요
-  function ensureRegistered() {
-    if (S.id) return Promise.resolve(S.id);
-    return call('register', { mode: modeOf(), name: S.name, family: S.family }).then(function (st) {
-      S.id = st.id; save(); return S.id;
+  // ===== 저장 대기 줄 =====
+  // 글·선택 미션은 누르자마자 완료로 보여 주고, 저장은 뒤에서 순서대로 해요.
+  // 첫 저장 때 서버가 참가 기록도 함께 만들어요. 실패하면 자동으로 다시 시도해요.
+  var flushing = false, retryTimer = null, waiters = {}, syncMsg = '', syncBad = false;
+  function enqueue(mid, ans, photo, wasDone) {
+    var k = Date.now() + '-' + mid + '-' + Math.random().toString(36).slice(2, 6);
+    var inflight = flushing && S.pending[0] ? S.pending[0].k : null;
+    S.pending = S.pending.filter(function (j) { return j.mid !== mid || j.k === inflight; });
+    S.pending.push({ k: k, mid: mid, ans: ans, photo: !!photo, wasDone: !!wasDone });
+    save();
+    return k;
+  }
+  function transient(e) {
+    var m = (e && e.message) || '';
+    if (!e || !e.server) return true;                       // 인터넷 연결 문제
+    return /많아요|HTTP 5|HTTP 429|too many|timed out|시간 초과|Lock/i.test(m);
+  }
+  function finish(k, err) { var w = waiters[k]; if (w) { delete waiters[k]; if (err) w.reject(err); else w.resolve(); } }
+  function flush() {
+    if (flushing || !S.pending.length) { renderSync(); return; }
+    clearTimeout(retryTimer);
+    flushing = true; renderSync();
+    var job = S.pending[0];
+    call('saveMission', S.id || '', job.mid, job.ans, { name: S.name, family: S.family }).then(function (st) {
+      flushing = false; syncBad = false; syncMsg = '';
+      S.pending = S.pending.filter(function (j) { return j.k !== job.k; });
+      applyServer(st); render();
+      finish(job.k, null);
+      flush();
+    }).catch(function (e) {
+      flushing = false;
+      if (transient(e) && !waiters[job.k]) {
+        syncBad = false; syncMsg = '연결이 불안정해서 다시 저장하는 중이에요';
+        renderSync();
+        retryTimer = setTimeout(flush, 6000);
+        return;
+      }
+      // 다시 해도 안 되는 오류(또는 사진): 이 미션은 완료를 취소하고 알려 줘요
+      S.pending = S.pending.filter(function (j) { return j.k !== job.k; });
+      if (!job.wasDone && !job.photo) delete S.done[job.mid];
+      save(); render();
+      if (waiters[job.k]) finish(job.k, e);
+      else { syncBad = true; syncMsg = '미션 ' + ('0' + job.mid).slice(-2) + '을 저장하지 못했어요. ' + errMsg(e).replace(/^저장하지 못했어요\.\s*/, ''); renderSync(); }
+      flush();
     });
   }
+  function renderSync() {
+    var el = $('syncState'); if (!el) return;
+    var n = S.pending.length;
+    el.className = 'sync' + (syncBad ? ' bad' : n ? ' busy' : '');
+    el.textContent = syncBad ? syncMsg
+      : n ? (syncMsg || '저장 중') + ' · ' + n + '개 남음'
+      : (S.id ? '모든 미션이 저장됐어요' : '');
+    var g = $('giftBtn');
+    if (g && n && !S.gift) { g.disabled = true; $('giftNote').textContent = '아직 저장 중인 미션이 있어요. 잠시만 기다려 주세요.'; }
+  }
+  window.addEventListener('online', flush);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) flush(); });
 
   // ===== 미션 시트 =====
   var overlay = $('overlay');
@@ -672,20 +735,29 @@ textarea.input { resize: vertical; min-height: 110px; }
 
   function complete(m, ans) {
     var before = lineInfo().count, wasAll = doneCount() === 9;
-    var go = $('m-go'); if (go) go.disabled = true;
-    busy(true, m.kind === 'photo' ? '사진 올리는 중...' : '저장 중...');
-    ensureRegistered().then(function (id) {
-      return call('saveMission', id, m.id, ans);
-    }).then(function (st) {
-      busy(false);
-      S.answers[m.id] = ans;
-      applyServer(st); S.done[m.id] = true; save();
-      closeSheet(); render(); celebrate(m, before, wasAll);
-    }).catch(function (e) {
-      busy(false);
-      if (go) go.disabled = false;
-      var err = $('m-err'); if (err) err.textContent = errMsg(e);
-    });
+    var go = $('m-go');
+    if (m.kind === 'photo') {
+      // 사진은 드라이브에 올라간 걸 확인한 뒤 완료로 바꿔요
+      if (go) go.disabled = true;
+      busy(true, '사진 올리는 중...');
+      var k = enqueue(m.id, ans, true, !!S.done[m.id]);
+      new Promise(function (resolve, reject) { waiters[k] = { resolve: resolve, reject: reject }; flush(); }).then(function () {
+        busy(false);
+        S.answers[m.id] = ans; S.done[m.id] = true; save();
+        closeSheet(); render(); celebrate(m, before, wasAll);
+      }).catch(function (e) {
+        busy(false);
+        if (go) go.disabled = false;
+        var err = $('m-err'); if (err) err.textContent = errMsg(e);
+      });
+      return;
+    }
+    // 글·선택 미션은 바로 완료
+    var wasDone = !!S.done[m.id];
+    S.answers[m.id] = ans; S.done[m.id] = true;
+    enqueue(m.id, ans, false, wasDone);
+    closeSheet(); render(); celebrate(m, before, wasAll);
+    flush();
   }
   function celebrate(m, before, wasAll) {
     var t = document.querySelector('.tile[data-i="' + (m.id - 1) + '"]'); if (t) t.classList.add('pop');
@@ -715,6 +787,7 @@ textarea.input { resize: vertical; min-height: 110px; }
   $('giftBtn').addEventListener('click', function () {
     var li = lineInfo(), dc = doneCount();
     if (dc < 9 || S.gift) return;
+    if (S.pending.length) { flush(); toast('저장 중이에요. 잠시만요'); return; }
     var tierName = '9칸 올빙고 선물';
     var who = S.name;
     openSheet(
@@ -769,6 +842,7 @@ textarea.input { resize: vertical; min-height: 110px; }
   if (S.id) {
     call('getState', S.id).then(function (st) { if (st) { applyServer(st); render(); } }).catch(function () {});
   }
+  flush();   // 닫기 전에 남은 저장이 있으면 이어서 저장
 })();
 </script>
 </body>
