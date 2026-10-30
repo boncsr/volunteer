@@ -250,7 +250,7 @@ textarea.input { resize: vertical; min-height: 110px; }
 .ticket .row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 .ticket .done-stamp { border: 4px solid var(--leaf); color: var(--leaf); font-family: var(--f-display); font-size: 24px; padding: 4px 14px; transform: rotate(-6deg); }
 .staff { border-top: 4px dashed var(--ink); padding-top: 14px; display: flex; flex-direction: column; gap: 10px; }
-.staff .pin { letter-spacing: 10px; text-align: center; font-family: var(--f-pixel); font-size: 18px; }
+.show-staff { margin: 0; text-align: center; font-family: var(--f-display); font-size: 28px; line-height: 1.25; color: var(--ink); background: var(--gold); border: 4px solid var(--ink); padding: 14px 10px; word-break: keep-all; }
 
 /* toast + confetti */
 .toast {
@@ -336,7 +336,7 @@ textarea.input { resize: vertical; min-height: 110px; }
 
   // ===== 서버 호출 =====
   // ▼ Apps Script 웹 앱 URL(…/exec)을 여기에 붙여 넣으세요
-  var API_URL = 'https://script.google.com/macros/s/AKfycbzD12nxPsHNY0wYdzNOUhQcinDJ8Zr8mg3aoA1_aeg0IDjyKz2zPSrmZwDRK9Rvnut3bw/exec';
+  var API_URL = 'PASTE_YOUR_WEB_APP_URL_HERE';
 
   function call(fn) {
     var args = Array.prototype.slice.call(arguments, 1);
@@ -499,7 +499,7 @@ textarea.input { resize: vertical; min-height: 110px; }
     $('tiers').innerHTML = '<div class="' + cls + '"><span class="pixel-label">ALL CLEAR</span><strong>9칸 올빙고 선물</strong><small>' + esc(status) + '</small></div>';
     $('giftBtn').disabled = !(allReady && !S.gift);
     $('giftNote').textContent = S.gift ? '선물을 받았어요. 함께해 줘서 고마워요!'
-      : allReady ? '스태프에게 이 화면을 보여 주고 버튼을 눌러요.'
+      : allReady ? '버튼을 누르고 사회공헌팀에게 화면을 보여 주세요.'
       : '9칸 미션을 모두 완료하면 선물을 받을 수 있어요.';
     renderSync();
   }
@@ -796,31 +796,34 @@ textarea.input { resize: vertical; min-height: 110px; }
       (S.family ? '<span>자녀 ' + esc(S.family) + '</span>' : '') +
       '<div class="row"><span class="chip">LINES <b>' + li.count + '</b></span><span class="chip">CLEAR <b>' + dc + '/9</b></span></div>' +
       '<strong style="font-family: var(--f-display); font-weight: 400; font-size: 22px; color: var(--leaf)">' + tierName + '</strong></div>' +
-      '<div class="staff"><span class="pixel-label">STAFF ONLY</span><label for="g-pin">사회공헌팀 스태프 비밀번호</label>' +
-      '<input class="input pin" id="g-pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off">' +
-      '<p class="error" id="g-err"></p><button type="button" class="btn blue block" id="g-go">선물 지급 완료</button></div>',
+      '<p class="show-staff">사회공헌팀에게<br>이 화면을 보여 주세요!</p>' +
+      '<div class="staff" id="g-area"><button type="button" class="btn blue block" id="g-ask">선물을 받았어요</button></div>' +
+      '<p class="error" id="g-err"></p>',
       function () {
-        $('g-go').addEventListener('click', function () {
+        $('g-ask').addEventListener('click', function () {
+          $('g-area').innerHTML = '<p class="note" style="margin: 0; font-size: 16px; color: var(--ink)">사회공헌팀에게 선물을 받았나요? 확인하면 다시 받을 수 없어요.</p>' +
+            '<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px"><button type="button" class="btn ghost" id="g-no">아직이요</button><button type="button" class="btn blue" id="g-go">네, 받았어요</button></div>';
+          $('g-no').addEventListener('click', function () { $('giftBtn').click(); });
+          $('g-go').addEventListener('click', redeemNow);
+        });
+        function redeemNow() {
           var err = $('g-err'); err.textContent = '';
-          var pin = $('g-pin').value.trim();
-          if (!pin) { err.textContent = '스태프가 비밀번호를 입력해 주세요.'; return; }
           var btn = $('g-go'); btn.disabled = true;
-          busy(true, '확인 중...');
-          call('redeem', S.id, pin).then(function (res) {
+          busy(true, '기록 중...');
+          call('redeem', S.id).then(function (res) {
             busy(false); btn.disabled = false;
             if (!res || !res.ok) {
               var code = res && res.error;
               if (res && res.state) { applyServer(res.state); render(); }
-              err.textContent = code === 'pin' ? '비밀번호가 맞지 않아요. 스태프가 입력해 주세요.'
-                : code === 'already' ? '이미 선물을 받은 기록이 있어요.'
+              err.textContent = code === 'already' ? '이미 선물을 받은 기록이 있어요.'
                 : code === 'notready' ? '아직 9칸을 모두 채우지 않았어요.'
-                : '참가 기록을 찾을 수 없어요. 스태프에게 알려 주세요.';
+                : '참가 기록을 찾을 수 없어요. 사회공헌팀에게 알려 주세요.';
               return;
             }
             applyServer(res.state); render();
             showDone(res.at);
           }).catch(function (e) { busy(false); btn.disabled = false; err.textContent = errMsg(e); });
-        });
+        }
       }
     );
     function showDone(now) {
