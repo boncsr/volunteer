@@ -336,7 +336,7 @@ textarea.input { resize: vertical; min-height: 110px; }
 
   // ===== 서버 호출 =====
   // ▼ Apps Script 웹 앱 URL(…/exec)을 여기에 붙여 넣으세요
-  var API_URL = 'PASTE_YOUR_WEB_APP_URL_HERE';
+  var API_URL = 'https://script.google.com/macros/s/AKfycbzD12nxPsHNY0wYdzNOUhQcinDJ8Zr8mg3aoA1_aeg0IDjyKz2zPSrmZwDRK9Rvnut3bw/exec';
 
   function call(fn) {
     var args = Array.prototype.slice.call(arguments, 1);
@@ -348,10 +348,17 @@ textarea.input { resize: vertical; min-height: 110px; }
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: fn, args: args }),
       redirect: 'follow'
+    }).catch(function () {
+      var ne = new Error('서버에 닿지 못했어요'); ne.kind = 'blocked'; throw ne;
     }).then(function (r) {
       if (!r.ok) { var he = new Error('HTTP ' + r.status); he.server = true; throw he; }
-      return r.json();
-    }).then(function (j) {
+      return r.text();
+    }).then(function (t) {
+      var j;
+      try { j = JSON.parse(t); } catch (x) {
+        var pe = new Error('서버가 데이터 대신 다른 화면을 보냈어요 (' + String(t).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80) + ')');
+        pe.server = true; pe.kind = 'notjson'; throw pe;
+      }
       if (!j || !j.ok) { var se = new Error((j && j.error) || '알 수 없는 오류'); se.server = true; throw se; }
       return j.data;
     });
@@ -562,9 +569,15 @@ textarea.input { resize: vertical; min-height: 110px; }
     }).catch(function (e) {
       flushing = false;
       if (transient(e) && !waiters[job.k]) {
-        syncBad = false; syncMsg = '연결이 불안정해서 다시 저장하는 중이에요';
+        job.tries = (job.tries || 0) + 1; save();
+        if (job.tries >= 3 && navigator.onLine !== false && e && e.kind === 'blocked') {
+          // 인터넷은 되는데 서버에만 못 닿는 경우: 대부분 웹 앱 '액세스 권한' 설정 문제
+          syncBad = true; syncMsg = '서버에 연결되지 않아요. 사회공헌팀에게 알려 주세요. (웹 앱 액세스 권한 확인 필요) 계속 다시 시도하고 있어요.';
+        } else {
+          syncBad = false; syncMsg = '연결이 불안정해서 다시 저장하는 중이에요';
+        }
         renderSync();
-        retryTimer = setTimeout(flush, 6000);
+        retryTimer = setTimeout(flush, job.tries >= 3 ? 10000 : 6000);
         return;
       }
       // 다시 해도 안 되는 오류(또는 사진): 이 미션은 완료를 취소하고 알려 줘요
